@@ -24,6 +24,7 @@ public class IterableExtension extends MessageProcessor {
     public static final String SETTING_APNS_KEY = "apnsProdIntegrationName";
     public static final String SETTING_APNS_SANDBOX_KEY = "apnsSandboxIntegrationName";
     public static final String SETTING_LIST_ID = "listId";
+    public static final String SETTING_PARSE_USER_ATTRIBUTES = "parseUserAttributes";
     IterableService iterableService;
 
     @Override
@@ -232,7 +233,7 @@ public class IterableExtension extends MessageProcessor {
                 }
             }
             if (!isEmpty(userUpdateRequest.email) || !isEmpty(userUpdateRequest.userId)) {
-                userUpdateRequest.dataFields = request.getUserAttributes();
+                userUpdateRequest.dataFields = getUserAttributes(request);
                 Response<IterableApiResponse> response = iterableService.userUpdate(getApiKey(request), userUpdateRequest).execute();
                 if (response.isSuccessful()) {
                     IterableApiResponse apiResponse = response.body();
@@ -241,6 +242,28 @@ public class IterableExtension extends MessageProcessor {
                     }
                 }
             }
+        }
+    }
+
+    private Map<String, Object> getUserAttributes(EventProcessingRequest request) {
+        String settingValue = request.getAccount().getAccountSettings().get(SETTING_PARSE_USER_ATTRIBUTES);
+        Boolean parseUserAttributes = settingValue == null ?
+            false :
+            Boolean.parseBoolean(settingValue.toLowerCase(Locale.US));
+
+        Map<String, String> userAttributes = request.getUserAttributes();
+        if (userAttributes == null) {
+            return null;
+        }
+        
+        if (parseUserAttributes) {
+            return attemptTypeConversion(userAttributes);
+        }
+        else {
+            Map<String, Object> mapObj = new HashMap<String, Object>();
+            mapObj.putAll(userAttributes);
+
+            return mapObj;
         }
     }
 
@@ -264,7 +287,7 @@ public class IterableExtension extends MessageProcessor {
                     }
                 }
             }
-            apiUser.dataFields = event.getRequest().getUserAttributes();
+            apiUser.dataFields = getUserAttributes(event.getRequest());
             purchaseRequest.user = apiUser;
             purchaseRequest.total = event.getTotalAmount();
             if (event.getProducts() != null) {

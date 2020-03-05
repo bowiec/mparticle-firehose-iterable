@@ -94,7 +94,7 @@ public class IterableServiceTest {
         UserUpdateRequest userUpdateRequest = new UserUpdateRequest();
         userUpdateRequest.userId = TEST_USER_ID;
         userUpdateRequest.email = TEST_EMAIL;
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, Object> attributes = new HashMap<String, Object>();
         attributes.put("test attribute key", "test attribute value");
 
         userUpdateRequest.dataFields = attributes;
@@ -127,12 +127,12 @@ public class IterableServiceTest {
         String email1 = userId1 + "@mparticle.com";
         String email2 = userId2 + "@mparticle.com";
         ApiUser user1 = new ApiUser();
-        Map<String, String> attributes1 = new HashMap<String, String>();
+        Map<String, Object> attributes1 = new HashMap<String, Object>();
         attributes1.put("test subscribe key", "test subscribe value 1");
         user1.dataFields = attributes1;
         user1.email = email1;
         user1.userId = userId1;
-        Map<String, String> attributes2 = new HashMap<String, String>();
+        Map<String, Object> attributes2 = new HashMap<String, Object>();
         attributes2.put("test subscribe key", "test subscribe value 2");
         ApiUser user2 = new ApiUser();
         user2.dataFields = attributes2;
