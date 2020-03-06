@@ -252,8 +252,7 @@ public class IterableExtension extends MessageProcessor {
         
         if (coerceStringsToScalars) {
             return attemptTypeConversion(attributes);
-        }
-        else {
+        } else {
             Map<String, Object> mapObj = new HashMap<String, Object>();
             mapObj.putAll(attributes);
 
