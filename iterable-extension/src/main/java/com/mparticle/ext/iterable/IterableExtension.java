@@ -24,7 +24,7 @@ public class IterableExtension extends MessageProcessor {
     public static final String SETTING_APNS_KEY = "apnsProdIntegrationName";
     public static final String SETTING_APNS_SANDBOX_KEY = "apnsSandboxIntegrationName";
     public static final String SETTING_LIST_ID = "listId";
-    public static final String SETTING_PARSE_USER_ATTRIBUTES = "parseUserAttributes";
+    public static final String SETTING_COERCE_STRINGS_TO_SCALARS = "coerceStringsToScalars";
     IterableService iterableService;
 
     @Override
@@ -233,7 +233,7 @@ public class IterableExtension extends MessageProcessor {
                 }
             }
             if (!isEmpty(userUpdateRequest.email) || !isEmpty(userUpdateRequest.userId)) {
-                userUpdateRequest.dataFields = getUserAttributes(request);
+                userUpdateRequest.dataFields = convertAttributes(request.getUserAttributes(), shouldCoerceStrings(request));
                 Response<IterableApiResponse> response = iterableService.userUpdate(getApiKey(request), userUpdateRequest).execute();
                 if (response.isSuccessful()) {
                     IterableApiResponse apiResponse = response.body();
@@ -245,24 +245,26 @@ public class IterableExtension extends MessageProcessor {
         }
     }
 
-    private Map<String, Object> getUserAttributes(EventProcessingRequest request) {
-        String settingValue = request.getAccount().getAccountSettings().get(SETTING_PARSE_USER_ATTRIBUTES);
-        boolean parseUserAttributes = Boolean.parseBoolean(settingValue);
-
-        Map<String, String> userAttributes = request.getUserAttributes();
-        if (userAttributes == null) {
+    private Map<String, Object> convertAttributes(Map<String, String> attributes, boolean coerceStringsToScalars) {
+        if (attributes == null) {
             return null;
         }
         
-        if (parseUserAttributes) {
-            return attemptTypeConversion(userAttributes);
+        if (coerceStringsToScalars) {
+            return attemptTypeConversion(attributes);
         }
         else {
             Map<String, Object> mapObj = new HashMap<String, Object>();
-            mapObj.putAll(userAttributes);
+            mapObj.putAll(attributes);
 
             return mapObj;
         }
+    }
+
+    private static boolean shouldCoerceStrings(EventProcessingRequest request) {
+        String settingValue = request.getAccount().getAccountSettings().get(SETTING_COERCE_STRINGS_TO_SCALARS);
+        
+        return Boolean.parseBoolean(settingValue);
     }
 
     private static boolean isEmpty(CharSequence chars) {
@@ -285,12 +287,13 @@ public class IterableExtension extends MessageProcessor {
                     }
                 }
             }
-            apiUser.dataFields = getUserAttributes(event.getRequest());
+            boolean shouldCoerceStrings = shouldCoerceStrings(event.getRequest());
+            apiUser.dataFields = convertAttributes(event.getRequest().getUserAttributes(), shouldCoerceStrings);
             purchaseRequest.user = apiUser;
             purchaseRequest.total = event.getTotalAmount();
             if (event.getProducts() != null) {
                 purchaseRequest.items = event.getProducts().stream()
-                        .map(p -> convertToCommerceItem(p))
+                        .map(p -> convertToCommerceItem(p, shouldCoerceStrings))
                         .collect(Collectors.toList());
             }
 
@@ -303,9 +306,9 @@ public class IterableExtension extends MessageProcessor {
         }
     }
 
-    CommerceItem convertToCommerceItem(Product product) {
+    CommerceItem convertToCommerceItem(Product product, boolean shouldCoerceStrings) {
         CommerceItem item = new CommerceItem();
-        item.dataFields = product.getAttributes();
+        item.dataFields = convertAttributes(product.getAttributes(), shouldCoerceStrings); // change?
         //iterable requires ID, and they also take SKU. mParticle doesn't differentiate
         //between sku and id. so, use our sku/id for both in Iterable:
         item.id = item.sku = product.getId();

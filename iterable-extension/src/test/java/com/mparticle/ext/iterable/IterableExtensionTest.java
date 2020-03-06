@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static com.mparticle.ext.iterable.IterableExtension.SETTING_API_KEY;
-import static com.mparticle.ext.iterable.IterableExtension.SETTING_PARSE_USER_ATTRIBUTES;
+import static com.mparticle.ext.iterable.IterableExtension.SETTING_COERCE_STRINGS_TO_SCALARS;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.times;
 
@@ -151,13 +151,13 @@ public class IterableExtensionTest {
         userAttributes.put("test_float", "1.5");
         request.setUserAttributes(userAttributes);
         
-        settings.put(SETTING_PARSE_USER_ATTRIBUTES, "True");
+        settings.put(SETTING_COERCE_STRINGS_TO_SCALARS, "True");
         extension.updateUser(request);
         
-        settings.put(SETTING_PARSE_USER_ATTRIBUTES, "False");
+        settings.put(SETTING_COERCE_STRINGS_TO_SCALARS, "False");
         extension.updateUser(request);
 
-        settings.remove(SETTING_PARSE_USER_ATTRIBUTES);
+        settings.remove(SETTING_COERCE_STRINGS_TO_SCALARS);
         extension.updateUser(request);
 
         ArgumentCaptor<UserUpdateRequest> argument = ArgumentCaptor.forClass(UserUpdateRequest.class);
@@ -166,17 +166,17 @@ public class IterableExtensionTest {
 
         List<UserUpdateRequest> actualRequests = argument.getAllValues();
 
-        // SETTING_PARSE_USER_ATTRIBUTES == True
+        // SETTING_COERCE_STRINGS_TO_SCALARS == True
         assertEquals(true, actualRequests.get(0).dataFields.get("test_bool"));
         assertEquals(123, actualRequests.get(0).dataFields.get("test_int"));
         assertEquals(1.5, actualRequests.get(0).dataFields.get("test_float"));
 
-        // SETTING_PARSE_USER_ATTRIBUTES == False
+        // SETTING_COERCE_STRINGS_TO_SCALARS == False
         assertEquals("True", actualRequests.get(1).dataFields.get("test_bool"));
         assertEquals("123", actualRequests.get(1).dataFields.get("test_int"));
         assertEquals("1.5", actualRequests.get(1).dataFields.get("test_float"));
 
-        // SETTING_PARSE_USER_ATTRIBUTES not set
+        // SETTING_COERCE_STRINGS_TO_SCALARS not set
         assertEquals("True", actualRequests.get(2).dataFields.get("test_bool"));
         assertEquals("123", actualRequests.get(2).dataFields.get("test_int"));
         assertEquals("1.5", actualRequests.get(2).dataFields.get("test_float"));
@@ -532,15 +532,22 @@ public class IterableExtensionTest {
         product.setCategory("some category");
         Map<String, String> attributes = new HashMap<>();
         attributes.put("a key", "a value");
+        attributes.put("an int key", "123");
         product.setAttributes(attributes);
         product.setQuantity(new BigDecimal(1.4));
-        CommerceItem item = new IterableExtension().convertToCommerceItem(product);
+        CommerceItem item = new IterableExtension().convertToCommerceItem(product, true);
         assertEquals("some id", item.id);
         assertEquals("some id", item.sku);
         assertEquals("some name", item.name);
         assertEquals("some category", item.categories.get(0));
         assertEquals("a value", item.dataFields.get("a key"));
+        assertEquals(123, item.dataFields.get("an int key"));
         assertEquals((Integer) new BigDecimal(1.4).intValue(), item.quantity);
+
+        item = new IterableExtension().convertToCommerceItem(product, false);
+        assertEquals("123", item.dataFields.get("an int key"));
+
+
     }
 
     @org.junit.Test
