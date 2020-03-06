@@ -468,6 +468,11 @@ public class IterableExtension extends MessageProcessor {
                         .setIsRequired(false)
                         .setDescription("APNS Production integration name set up in the Mobile Push section of your Iterable account.")
         );
+        eventSettings.add(
+                new BooleanSetting(SETTING_COERCE_STRINGS_TO_SCALARS, "Coerce Strings to Scalars")
+                        .setIsChecked(true)
+                        .setDescription("If enabled, mParticle will attempt to coerce string attributes into scalar types (integer, boolean, and float).")
+        );
         eventProcessingRegistration.setAccountSettings(eventSettings);
 
         // Specify supported event types
