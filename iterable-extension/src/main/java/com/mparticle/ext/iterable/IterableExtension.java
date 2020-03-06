@@ -247,9 +247,7 @@ public class IterableExtension extends MessageProcessor {
 
     private Map<String, Object> getUserAttributes(EventProcessingRequest request) {
         String settingValue = request.getAccount().getAccountSettings().get(SETTING_PARSE_USER_ATTRIBUTES);
-        Boolean parseUserAttributes = settingValue == null ?
-            false :
-            Boolean.parseBoolean(settingValue.toLowerCase(Locale.US));
+        Boolean parseUserAttributes = Boolean.parseBoolean(settingValue);
 
         Map<String, String> userAttributes = request.getUserAttributes();
         if (userAttributes == null) {
