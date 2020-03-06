@@ -95,7 +95,7 @@ public class IterableServiceTest {
         userUpdateRequest.userId = TEST_USER_ID;
         userUpdateRequest.email = TEST_EMAIL;
         Map<String, Object> attributes = new HashMap<String, Object>();
-        attributes.put("test attribute key", "test attribute value");
+        attributes.put("test string key", "test attribute string value");
 
         userUpdateRequest.dataFields = attributes;
         Response<IterableApiResponse> response = iterableService.userUpdate(ITERABLE_API_KEY, userUpdateRequest).execute();
