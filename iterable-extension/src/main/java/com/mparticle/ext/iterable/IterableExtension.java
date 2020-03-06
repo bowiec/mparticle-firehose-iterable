@@ -308,7 +308,7 @@ public class IterableExtension extends MessageProcessor {
 
     CommerceItem convertToCommerceItem(Product product, boolean shouldCoerceStrings) {
         CommerceItem item = new CommerceItem();
-        item.dataFields = convertAttributes(product.getAttributes(), shouldCoerceStrings); // change?
+        item.dataFields = convertAttributes(product.getAttributes(), shouldCoerceStrings);
         //iterable requires ID, and they also take SKU. mParticle doesn't differentiate
         //between sku and id. so, use our sku/id for both in Iterable:
         item.id = item.sku = product.getId();
