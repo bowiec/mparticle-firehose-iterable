@@ -263,6 +263,9 @@ public class IterableExtension extends MessageProcessor {
     private static boolean shouldCoerceStrings(EventProcessingRequest request) {
         String settingValue = request.getAccount().getAccountSettings().get(SETTING_COERCE_STRINGS_TO_SCALARS);
         
+        if (settingValue == null) { 
+            return false;
+        }
         return Boolean.parseBoolean(settingValue);
     }
 
